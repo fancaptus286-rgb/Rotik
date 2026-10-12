@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotik, prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap">
+<style>
+:root{--bg:#F4EFFF;--card:#fff;--ink:#24215A;--soft:#6B67A3;--line:#DAD3F5;--pink:#FF4F8B;--sun:#FFD23F;--mint:#27C2A0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17153A;--card:#221F55;--ink:#F2EFFF;--soft:#A9A5DD;--line:#37336F}}
+:root[data-theme="dark"]{--bg:#17153A;--card:#221F55;--ink:#F2EFFF;--soft:#A9A5DD;--line:#37336F}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:1.05rem}
+.phone{max-width:430px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+.scr{flex:1;display:flex;flex-direction:column;gap:14px;padding:24px 22px;overflow-y:auto}
+.scr[hidden]{display:none}
+h1{font-size:2.1rem;line-height:1.05;font-weight:800}
+.s{color:var(--soft)}
+label{font-weight:700;display:block;margin-bottom:4px}
+input,select{font:inherit;width:100%;padding:11px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+.row{display:flex;gap:8px}
+.btn{font:inherit;font-weight:800;font-size:1.1rem;min-height:48px;padding:10px 20px;border:0;border-radius:999px;background:var(--pink);color:#fff;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
+.btn.sun{background:var(--sun);color:#24215A}
+:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
+.note{background:var(--card);border-left:6px solid var(--mint);border-radius:12px;padding:12px 14px}
+.err{color:var(--pink);font-weight:700;min-height:1.3em}
+.logo{display:flex;gap:6px;font-size:3.8rem;font-weight:800;line-height:1;margin:8px 0}
+.logo span{display:inline-block;padding:2px 10px 6px;border-radius:16px;color:#24215A}
+.mark{width:104px;height:104px;display:block}
+.grow{flex:1}
+.link{background:none;border:0;font:inherit;color:var(--soft);text-decoration:underline;cursor:pointer;padding:8px}
+.stage{position:relative;height:min(48dvh,420px);aspect-ratio:9/14;margin:0 auto;border-radius:22px;overflow:hidden;background:#000;touch-action:none;flex:none}
+.bg{position:absolute;inset:0;background:linear-gradient(135deg,#FF4F8B,#FFD23F,#27C2A0,#FF4F8B);background-size:300% 300%;animation:mv 8s linear infinite}
+@keyframes mv{50%{background-position:100% 100%}}
+@media(prefers-reduced-motion:reduce){.bg{animation:none}}
+.stk{position:absolute;font-size:2.6rem;line-height:1;cursor:grab;touch-action:none;user-select:none}
+.stk.t{font-weight:800;font-size:1.7rem;color:#fff;text-shadow:0 2px 0 #24215A,0 0 10px #24215A}
+.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{font:inherit;font-size:1.5rem;min-width:48px;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip.w{font-size:1rem;font-weight:700;padding:0 14px}
+.feed{padding:16px 22px 0;overflow:hidden}.fbar{display:flex;justify-content:space-between;align-items:center}.fbar h1{font-size:1.6rem}.vids{flex:1;min-height:0;overflow-y:auto;scroll-snap-type:y mandatory}.vid{height:100%;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-top:8px}.vid .stage{--h:min(52dvh,430px)}.stk.t{white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.stage{--h:min(48dvh,420px);height:var(--h);width:calc(var(--h)*9/14);aspect-ratio:auto;touch-action:pan-y;container-type:inline-size}
+.stk{font-size:14cqw}.stk.t{font-size:7cqw}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;border-radius:12px}
+.grid .stage{width:100%;height:auto;aspect-ratio:9/14;border-radius:12px}
+.phead{display:flex;gap:14px;align-items:center}
+.avatar{width:64px;height:64px;flex:none;border-radius:50%;background:var(--sun);color:#24215A;display:grid;place-items:center;font-size:2rem;font-weight:800}
+.nav{display:flex;justify-content:space-around;align-items:center;padding:8px 12px;background:var(--card);border-top:2px solid var(--line)}
+.nav[hidden]{display:none}
+.nav button{font:inherit;font-size:.85rem;font-weight:700;display:flex;flex-direction:column;align-items:center;min-width:72px;min-height:52px;border:0;border-radius:16px;background:none;color:var(--soft);cursor:pointer}
+.nav button b{font-size:1.5rem;line-height:1.1}
+.nav button[aria-current=page]{background:var(--bg);color:var(--ink)}
+.nav .mid{background:var(--pink);color:#fff}
+.nav .mid[aria-current=page]{background:var(--pink);color:#fff;box-shadow:0 0 0 3px var(--sun)}
+.bg video,.bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+textarea{font:inherit;width:100%;padding:11px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);resize:none}
+dialog{border:0;border-radius:22px;padding:20px;background:var(--card);color:var(--ink);width:min(92vw,400px);margin:auto;font:inherit}
+dialog::backdrop{background:rgba(20,18,60,.6)}
+dialog h2{font-size:1.4rem;margin-bottom:4px}
+dialog .row{margin-top:12px}dialog .row .btn{flex:1}
+.opt{display:flex;gap:10px;align-items:center;margin:0;padding:8px 0;font-weight:500}
+.opt input{width:22px;height:22px;padding:0;accent-color:var(--pink)}
+.row[hidden]{display:none}
+#cm[open]{display:flex;flex-direction:column;margin:auto auto 0;width:min(100vw,430px);max-height:72dvh;border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.cml{flex:1;min-height:80px;overflow-y:auto;margin:8px 0;display:flex;flex-direction:column;gap:10px}
+#cmIn{flex:1;min-width:0}
+dialog #cmForm .btn{flex:none}
+body.fd{background:#000}
+.feed{padding:0;gap:0;background:#000;position:relative}
+.vids{scrollbar-width:none}.vids::-webkit-scrollbar{display:none}
+.vid{position:relative;display:block;height:100%;padding:0;text-align:left;scroll-snap-stop:always;overflow:hidden}
+.vid .stage{position:absolute;inset:0;width:100%;height:100%;border-radius:0;margin:0}
+.ftop{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;justify-content:center;padding:14px;color:#fff;font-weight:800;font-size:1.1rem;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none}
+.ftop{gap:22px}
+.ftop button{pointer-events:auto;font:inherit;font-weight:800;font-size:1.1rem;color:rgba(255,255,255,.7);background:none;border:0;border-bottom:3px solid transparent;padding:6px 2px;cursor:pointer;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.ftop button.on{color:#fff;border-bottom-color:#fff}
+.fol{pointer-events:auto;margin-left:4px;font:inherit;font-weight:800;font-size:.85rem;color:#fff;background:var(--pink);border:0;border-radius:999px;padding:4px 12px;min-height:30px;cursor:pointer;text-shadow:none}
+.fol.on{background:rgba(255,255,255,.25)}
+.emp{color:#fff;padding:96px 28px;text-align:center}
+#fl[open]{display:flex;flex-direction:column;margin:auto auto 0;width:min(100vw,430px);max-height:72dvh;border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.info{position:absolute;left:0;right:84px;bottom:0;z-index:1;padding:56px 16px 18px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.7));pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.info p{margin:0}
+.who{display:flex;align-items:center;gap:8px;margin-bottom:4px!important}
+.who i{width:36px;height:36px;flex:none;border-radius:50%;background:var(--sun);color:#24215A;display:grid;place-items:center;font-style:normal;font-weight:800;text-shadow:none}
+.sub{font-size:.85rem;opacity:.85;margin-top:2px!important}
+.side{position:absolute;right:6px;bottom:28px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:16px}
+.act{display:flex;flex-direction:column;align-items:center;min-width:52px;min-height:52px;border:0;background:none;color:#fff;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.act b{font-size:2rem;line-height:1.1}
+.act.on b{color:var(--pink)}
+.nav.dk{background:#000;border-top-color:#222}
+.nav.dk button{color:#c9c5ee}
+.nav.dk button[aria-current=page]{background:none;color:#fff}
+.phead{flex-direction:column;text-align:center}
+.avatar{width:84px;height:84px;font-size:2.6rem}
+.grid{gap:3px}
+.dots{display:grid;place-items:center;min-width:48px;min-height:48px;border:0;border-radius:50%;background:none;color:var(--ink);cursor:pointer}
+.dots svg{fill:currentColor}
+#pm[open]{display:flex;flex-direction:column;gap:10px;margin:auto auto 0;width:min(100vw,430px);border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+</style>
+</head>
+<body>
+<main class="phone">
+
+<section class="scr" id="s-welcome">
+  <div class="grow"></div>
+  <svg class="mark" viewBox="0 0 256 256" role="img" aria-label="Logo de Rotik"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4F8B"/><stop offset=".55" stop-color="#FFD23F"/><stop offset="1" stop-color="#27C2A0"/></linearGradient></defs><rect width="256" height="256" rx="58" fill="#24215A"/><g transform="rotate(-8 128 132)"><rect x="70" y="44" width="116" height="176" rx="26" fill="url(#lg)"/><path d="M112 100v64l52-32z" fill="#fff" stroke="#fff" stroke-width="12" stroke-linejoin="round"/></g><g transform="translate(192 62) rotate(14)" fill="#FFD23F" stroke="#fff" stroke-width="8" stroke-linejoin="round" paint-order="stroke"><polygon points="0,-30 7.6,-10.5 28.5,-9.3 12.4,4 17.6,24.3 0,13 -17.6,24.3 -12.4,4 -28.5,-9.3 -7.6,-10.5"/></g></svg>
+  <div class="logo" aria-label="Rotik">
+    <span style="background:var(--pink);color:#fff;transform:rotate(-6deg)">R</span><span style="background:var(--sun);transform:rotate(4deg)">o</span><span style="background:var(--mint);transform:rotate(-3deg)">t</span><span style="background:#B79CFF;transform:rotate(5deg)">i</span><span style="background:var(--sun);transform:rotate(-5deg)">k</span>
+  </div>
+  <h1>Videos cortos que decoras a tu manera</h1>
+  <p class="s">Para todas las edades.</p>
+  <div class="grow"></div>
+  <button class="btn" id="goBirth">Crear cuenta</button>
+  <button class="btn alt" id="login">Ya tengo cuenta</button>
+  <button class="link" id="reset">Reiniciar la prueba (borra las cuentas)</button>
+</section>
+
+<section class="scr" id="s-birth" hidden>
+  <h1>¿Cuándo naciste?</h1>
+  <p class="s">Con tu fecha preparamos Rotik para ti.</p>
+  <div class="row">
+    <div style="flex:1"><label for="d">Día</label><select id="d"></select></div>
+    <div style="flex:2"><label for="m">Mes</label><select id="m"></select></div>
+    <div style="flex:1.3"><label for="y">Año</label><select id="y"></select></div>
+  </div>
+  <p class="err" id="birthErr" role="alert"></p>
+  <div class="grow"></div>
+  <button class="btn" id="birthNext">Continuar</button>
+</section>
+
+<section class="scr" id="s-parent" hidden>
+  <h1>Necesitamos a un adulto para continuar</h1>
+  <p class="s">Pásale el celular a tu mamá, papá o tutor. Esta parte es solo para adultos.</p>
+  <div><label for="pyear">Año en que naciste (adulto)</label><input id="pyear" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Por ejemplo 1985"></div>
+  <div><label for="ppin">PIN del adulto (4 números)</label><input id="ppin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+  <p class="s" style="font-size:.9rem">Con este PIN podrás recuperar la cuenta. No lo compartas con tu hijo o hija.</p>
+  <label class="opt"><input type="checkbox" id="pok">Soy mamá, papá o tutor y doy permiso para esta cuenta con estas reglas: privada, sin mensajes ni comentarios de otras personas.</label>
+  <p class="err" id="parentErr" role="alert"></p>
+  <div class="grow"></div>
+  <button class="btn" id="parentNext">Dar permiso</button>
+</section>
+
+<section class="scr" id="s-account" hidden>
+  <h1 id="accTitle">Crea tu cuenta</h1>
+  <p class="note" id="accNote" hidden></p>
+  <div><label for="user">Nombre de usuario</label><input id="user" autocomplete="off" placeholder="Que no sea tu nombre real"></div>
+  <div><label for="pass">Contraseña</label><input id="pass" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+  <p class="err" id="accErr" role="alert"></p>
+  <div class="grow"></div>
+  <button class="btn" id="accNext">Entrar a Rotik</button>
+</section>
+
+<section class="scr" id="s-profile" hidden>
+  <div style="display:flex;justify-content:flex-end"><button class="dots" id="pMenu" aria-label="Más opciones"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></button></div>
+  <div class="phead">
+    <div class="avatar" id="pav" aria-hidden="true"></div>
+    <div><h1 id="pname" style="font-size:1.6rem"></h1><p class="s" id="pvis"></p></div>
+  </div>
+  <div class="row" style="justify-content:center;gap:24px"><p><strong id="pcount">0</strong> videos</p><button class="link" id="fcBtn" style="padding:0;text-decoration:none;color:inherit;font-size:inherit"><strong id="fcount">0</strong> siguiendo</button></div>
+  <div class="grid" id="grid"></div>
+  <p class="s" id="pempty" hidden>Todavía no publicaste videos. Toca Decorar para crear el primero.</p>
+</section>
+
+<section class="scr" id="s-forgot" hidden>
+  <h1>Recupera tu cuenta</h1>
+  <p class="s">Escribe tu nombre de usuario y tu código de recuperación. Si tu cuenta es de un menor de 13 años, escribe el PIN del adulto.</p>
+  <div><label for="fq">Nombre de usuario</label><input id="fq" autocomplete="username"></div>
+  <div><label for="fc">Código de recuperación o PIN del adulto</label><input id="fc" autocomplete="off"></div>
+  <div><label for="fp">Contraseña nueva</label><input id="fp" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+  <p class="err" id="fErr" role="alert"></p>
+  <div class="grow"></div>
+  <button class="btn" id="fSend">Cambiar contraseña</button>
+  <button class="btn alt" id="fBack">Volver</button>
+</section>
+
+<section class="scr" id="s-recov" hidden>
+  <h1>Guarda tu código de recuperación</h1>
+  <p class="s">Si olvidas tu contraseña, este código te deja volver a entrar. Anótalo en un lugar seguro: no lo volveremos a mostrar.</p>
+  <p class="note" id="recCode" style="font-size:1.8rem;font-weight:800;letter-spacing:.06em;text-align:center"></p>
+  <label class="opt"><input type="checkbox" id="recOk">Ya guardé mi código</label>
+  <p class="err" id="recErr" role="alert"></p>
+  <div class="grow"></div>
+  <button class="btn alt" id="recCopy">Copiar código</button>
+  <button class="btn" id="recGo">Continuar</button>
+</section>
+
+<section class="scr" id="s-login" hidden>
+  <h1>Qué bueno verte de nuevo</h1>
+  <div><label for="lu">Nombre de usuario</label><input id="lu" autocomplete="username"></div>
+  <div><label for="lp">Contraseña</label><input id="lp" type="password" autocomplete="current-password"></div>
+  <p class="err" id="logErr" role="alert"></p>
+  <button class="link" id="forgot" style="align-self:flex-start">Olvidé mi contraseña</button>
+  <div class="grow"></div>
+  <button class="btn" id="logNext">Entrar</button>
+  <button class="btn alt" id="toReg">No tengo cuenta, crear una</button>
+</section>
+
+<section class="scr" id="s-edit" hidden>
+  <h1>Decora tu video</h1>
+  <div class="stage" id="stage"><div class="bg" id="bg"></div></div>
+  <button class="btn alt" id="upBtn">Subir video o foto de la galería</button>
+  <input type="file" id="file" accept="video/*,image/*" hidden>
+  <p class="s" style="font-size:.85rem">Sube solo contenido apto para todas las edades. El contenido para mayores de 18 se elimina.</p>
+  <div class="tools" id="stickers" aria-label="Stickers"></div>
+  <div class="row">
+    <input id="txt" aria-label="Texto del video" placeholder="Escribe un texto" maxlength="24">
+    <button class="btn alt" id="addTxt" style="padding:10px 16px">Agregar</button>
+  </div>
+  <div class="tools">
+    <button class="chip w" id="filt">Filtro: normal</button>
+    <button class="chip w" id="big">Más grande</button>
+    <button class="chip w" id="del">Borrar</button>
+  </div>
+  <button class="btn" id="pub">Publicar</button>
+</section>
+
+<section class="scr feed" id="s-feed" hidden>
+  <div class="ftop"><button id="tFol">Siguiendo</button><button id="tFor" class="on">Para ti</button></div>
+  
+  <div class="vids" id="vids"></div>
+</section>
+
+<nav class="nav" id="nav" aria-label="Principal" hidden>
+  <button data-s="s-feed"><b>🏠</b>Inicio</button>
+  <button data-s="s-edit" class="mid"><b>+</b>Decorar</button>
+  <button data-s="s-profile"><b>👤</b>Perfil</button>
+</nav>
+</main>
+<dialog id="fl" aria-labelledby="flT">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 id="flT">Siguiendo</h2><button class="link" id="flX">Cerrar</button></div>
+  <div class="cml" id="flList"></div>
+</dialog>
+<dialog id="pm" aria-labelledby="pmT">
+  <h2 id="pmT">Tu perfil</h2>
+  <button class="btn alt" id="picBtn">Cambiar foto de perfil</button>
+  <button class="btn alt" id="picDel">Quitar foto de perfil</button>
+  <p class="s" id="picNote" hidden>Para tu seguridad, usa un dibujo o una imagen que no muestre tu cara.</p>
+  <button class="btn alt" id="out">Salir de la cuenta</button>
+  <button class="link" id="pmX">Cerrar</button>
+  <input type="file" id="picFile" accept="image/*" hidden>
+</dialog>
+<dialog id="cm" aria-labelledby="cmT">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 id="cmT">Comentarios</h2><button class="link" id="cmX">Cerrar</button></div>
+  <div class="cml" id="cmList"></div>
+  <p class="s" id="cmNote" hidden></p>
+  <div class="row" id="cmForm"><input id="cmIn" maxlength="140" aria-label="Escribe un comentario" placeholder="Escribe algo amable"><button class="btn" id="cmGo" style="padding:10px 16px">Enviar</button></div>
+</dialog>
+<dialog id="rep" aria-labelledby="repT">
+  <h2 id="repT">Denunciar este video</h2>
+  <p class="s">¿Qué pasa con este video? El creador no verá quién lo denunció.</p>
+  <div id="repOpts"></div>
+  <textarea id="repTxt" rows="2" maxlength="200" aria-label="Comentario" placeholder="Cuéntanos más (opcional)"></textarea>
+  <p class="s" style="font-size:.9rem;margin-top:8px">Si un niño o una niña está en peligro, avisa ya a un adulto de confianza.</p>
+  <div class="row"><button class="btn alt" id="repNo">Cancelar</button><button class="btn" id="repGo">Enviar denuncia</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+let kid=false,teen=false,user='';
+let cur='';const NAVS=['s-feed','s-edit','s-profile'];
+function go(id){cur=id;document.querySelectorAll('.scr').forEach(e=>e.hidden=e.id!==id);document.querySelector('#'+id).scrollTop=0;$('#nav').hidden=!NAVS.includes(id);$('#nav').classList.toggle('dk',id==='s-feed');document.body.classList.toggle('fd',id==='s-feed');document.querySelectorAll('#nav button').forEach(b=>b.dataset.s===id?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'))}
+let tt;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2600)}
+const store={get(){try{return localStorage.getItem('rotikU13')==='1'}catch(e){return false}},set(){try{localStorage.setItem('rotikU13','1')}catch(e){}},clear(){try{localStorage.removeItem('rotikU13')}catch(e){}}};
+
+// Fecha de nacimiento
+$('#d').innerHTML='<option value="">--</option>'+Array.from({length:31},(_,i)=>`<option>${i+1}</option>`).join('');
+$('#m').innerHTML='<option value="">Elige</option>'+MES.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+const Y=new Date().getFullYear();
+$('#y').innerHTML='<option value="">----</option>'+Array.from({length:Y-1919},(_,i)=>`<option>${Y-i}</option>`).join('');
+
+$('#goBirth').onclick=()=>go('s-birth');
+$('#login').onclick=()=>go('s-login');
+$('#reset').onclick=()=>{store.clear();try{localStorage.removeItem('rotikUsers');localStorage.removeItem('rotikSession');localStorage.removeItem('rotikVideos');localStorage.removeItem('rotikReports');localStorage.removeItem('rotikComments')}catch(e){}toast('Prueba reiniciada')};
+
+$('#birthNext').onclick=()=>{
+  const d=+$('#d').value,mv=$('#m').value,y=+$('#y').value,err=$('#birthErr');
+  if(!d||mv===''||!y){err.textContent='Elige día, mes y año.';return}
+  const m=+mv,b=new Date(y,m,d);
+  if(b.getMonth()!==m||b>new Date()){err.textContent='Esa fecha no es válida. Revísala.';return}
+  err.textContent='';
+  const t=new Date();let age=t.getFullYear()-y;
+  if(t.getMonth()<m||(t.getMonth()===m&&t.getDate()<d))age--;
+  if(age<13){store.set();kid=true;teen=false;go('s-parent')}
+  else if(store.get()){toast('Para continuar en este dispositivo necesitamos a un adulto');kid=true;teen=false;go('s-parent')}
+  else{kid=false;teen=age<18;openAccount()}
+};
+
+// Permiso del adulto
+let kidPin='';
+$('#parentNext').onclick=()=>{
+  const y=+$('#pyear').value,pin=$('#ppin').value.trim(),e=$('#parentErr');
+  if(!y||y<1920||new Date().getFullYear()-y<18){e.textContent='Esta parte es solo para adultos. Pásale el celular a tu mamá, papá o tutor.';return}
+  if(!/^\d{4}$/.test(pin)){e.textContent='El PIN debe tener 4 números.';return}
+  if(!$('#pok').checked){e.textContent='Marca la casilla para dar tu permiso.';return}
+  e.textContent='';kidPin=pin;$('#ppin').value='';kid=true;teen=false;openAccount();
+};
+
+// Cuenta
+function openAccount(){
+  const n=$('#accNote');
+  $('#accTitle').textContent=kid?'Tu adulto dijo que sí':'Crea tu cuenta';
+  n.hidden=!(kid||teen);
+  n.textContent=kid?'Tu cuenta es privada: solo ven tus videos las personas que tu adulto apruebe. No hay mensajes ni comentarios de desconocidos.':'Tu cuenta empieza privada y no recibes mensajes de desconocidos. Puedes cambiarlo más adelante.';
+  go('s-account');
+}
+$('#accNext').onclick=()=>{
+  const e=$('#accErr'),u=$('#user').value.trim();
+  if(u.length<3){e.textContent='El nombre de usuario necesita al menos 3 letras.';return}
+  if($('#pass').value.length<6){e.textContent='La contraseña necesita al menos 6 caracteres.';return}
+  e.textContent='';register(u,$('#pass').value);
+};
+
+// Editor
+const stage=$('#stage'),bg=$('#bg');
+const FILT=[['normal','none'],['vivo','saturate(1.8) hue-rotate(40deg)'],['gris','grayscale(1)'],['retro','contrast(1.3) sepia(.5)']];
+let fi=0;
+['⭐','🌈','🦄','🔥','💜','🎈','✨','🐱'].forEach(s=>{const b=document.createElement('button');b.className='chip';b.textContent=s;b.setAttribute('aria-label','Agregar sticker '+s);b.onclick=()=>add(s,false);$('#stickers').appendChild(b)});
+function add(t,isText){
+  const e=document.createElement('div');e.className='stk'+(isText?' t':'');e.textContent=t;
+  e.style.left=(25+Math.random()*30)+'%';e.style.top=(25+Math.random()*35)+'%';
+  stage.appendChild(e);drag(e);
+}
+function drag(e){
+  let dx=0,dy=0;
+  e.onpointerdown=ev=>{e.setPointerCapture(ev.pointerId);const r=e.getBoundingClientRect();dx=ev.clientX-r.left;dy=ev.clientY-r.top};
+  e.onpointermove=ev=>{
+    if(!e.hasPointerCapture(ev.pointerId))return;
+    const s=stage.getBoundingClientRect();
+    const x=Math.max(0,Math.min(s.width-e.offsetWidth,ev.clientX-s.left-dx));
+    const y=Math.max(0,Math.min(s.height-e.offsetHeight,ev.clientY-s.top-dy));
+    e.style.left=x/s.width*100+'%';e.style.top=y/s.height*100+'%';
+  };
+}
+const last=()=>[...stage.querySelectorAll('.stk')].pop();
+$('#addTxt').onclick=()=>{const v=$('#txt').value.trim();if(!v){toast('Escribe un texto primero');return}add(v,true);$('#txt').value=''};
+$('#filt').onclick=()=>{fi=(fi+1)%FILT.length;bg.style.filter=FILT[fi][1];$('#filt').textContent='Filtro: '+FILT[fi][0]};
+$('#big').onclick=()=>{const e=last();if(!e){toast('Agrega un sticker o un texto');return}e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*1.25/stage.clientWidth*100)+'cqw'};
+$('#del').onclick=()=>{const e=last();if(e)e.remove()};
+
+// Publicar
+const SEED=[
+ {u:'luna.arte',c:'Mi gato, la estrella del día',g:'linear-gradient(160deg,#FF4F8B,#7B5CFF,#FF4F8B)',f:'none',n:128,i:[['🐱',35,45],['⭐',65,15],['Hola, mundo',18,76,1]]},
+ {u:'dani.baila',c:'Paso nuevo, ¿lo intentas?',g:'linear-gradient(160deg,#27C2A0,#2B2A6B,#27C2A0)',f:'saturate(1.6)',n:342,i:[['🔥',60,28],['🌈',15,15],['¡Baila!',30,72,1]]},
+ {u:'abuela.rosa',c:'Arepas con mucho amor',g:'linear-gradient(160deg,#FFD23F,#FF8A3D,#FFD23F)',f:'contrast(1.2) sepia(.4)',n:87,i:[['🎈',68,22],['✨',22,48],['Con amor',32,78,1]]},
+ {u:'mateo.dibuja',c:'Un unicornio en 10 segundos',g:'linear-gradient(160deg,#B79CFF,#FF4F8B,#B79CFF)',f:'none',n:56,i:[['🦄',34,38],['💜',70,70],['Mágico',20,16,1]]}
+];
+function card(st,cap,sub,n,rep,cid0){
+  const v=document.createElement('div');v.className='vid';
+  const [au,...ct]=cap.split(' · '),cid=cid0||(rep&&rep.id);
+  const side=document.createElement('div');side.className='side';
+  const act=(ico,txt,fn)=>{const b=document.createElement('button');b.className='act';b.innerHTML='<b></b><span></span>';b.firstChild.textContent=ico;b.lastChild.textContent=txt;b.onclick=fn;side.append(b);return b};
+  let on=false,k=n;
+  const l=act('♥',k,()=>{on=!on;k+=on?1:-1;l.classList.toggle('on',on);l.lastChild.textContent=k});
+  const c=act('💬','',()=>openComments(cid,!!rep,cc));
+  const cc=()=>{c.lastChild.textContent=comments(cid,!!rep).length};cc();
+  if(rep)act('🚩','Denunciar',()=>openReport(rep,v));
+  const i=document.createElement('div');i.className='info';
+  const who=document.createElement('p');who.className='who';who.innerHTML='<i></i><strong></strong>';who.firstChild.textContent=au.charAt(1).toUpperCase();who.lastChild.textContent=au;
+  const mp=!rep&&myPic();if(mp){who.firstChild.textContent='';who.firstChild.style.background='url('+mp+') center/cover'}
+  if(rep){const fb=document.createElement('button');fb.className='fol';fb.dataset.u=rep.u;paintFol(fb);fb.onclick=()=>{FOL.toggle(user,rep.u);document.querySelectorAll('.fol').forEach(b=>{if(b.dataset.u===rep.u)paintFol(b)});toast(FOL.has(user,rep.u)?'Ahora sigues a @'+rep.u:'Dejaste de seguir a @'+rep.u)};who.append(fb)}
+  const tx=document.createElement('p');tx.textContent=ct.join(' · ');
+  i.append(who,tx);
+  if(sub){const s=document.createElement('p');s.className='sub';s.textContent=sub;i.append(s)}
+  v.append(st,i,side);return v;
+}
+function seedStage(d,still){
+  const s=document.createElement('div');s.className='stage';
+  const b=document.createElement('div');b.className='bg';if(d.g){b.style.background=d.g;b.style.backgroundSize='300% 300%'}b.style.filter=d.f;s.appendChild(b);
+  d.i.forEach(([t,x,y,tx,sz])=>{const e=document.createElement('div');e.className='stk'+(tx?' t':'');e.textContent=t;e.style.left=x+'%';e.style.top=y+'%';e.style.cursor='default';if(sz)e.style.fontSize=sz;s.appendChild(e)});
+  if(d.m)putMedia(s,d,still);
+  return s;
+}
+$('#pub').onclick=async()=>{
+  const d=snap();d.id='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  if(pend){try{await IDB.put(d.id,pend.f);d.m=pend.t}catch(e){toast('No hay espacio para guardar este archivo');return}}
+  VID.add(user.toLowerCase(),d);
+  openFeed(card(seedStage(d),'@'+user+' · Mi video en Rotik',privTxt(),0,null,d.id));toast('Publicado. Míralo en tu perfil');
+};
+function resetEd(){stage.querySelectorAll('.stk').forEach(e=>e.remove());bg.replaceChildren();pend=null;fi=0;bg.style.filter='none';$('#filt').textContent='Filtro: normal';go('s-edit')}
+const privTxt=()=>(kid||teen)?'Solo lo ven las personas que apruebes.':'Es público.';
+const snap=()=>({f:bg.style.filter||'none',i:[...stage.querySelectorAll('.stk')].map(e=>[e.textContent,parseFloat(e.style.left),parseFloat(e.style.top),e.classList.contains('t')?1:0,e.style.fontSize||''])});
+const VID={all(){try{return JSON.parse(localStorage.getItem('rotikVideos')||'{}')}catch(e){return {}}},add(k,v){const a=this.all();(a[k]=a[k]||[]).unshift(v);try{localStorage.setItem('rotikVideos',JSON.stringify(a))}catch(e){}}};
+function openProfile(){
+  const v=VID.all()[user.toLowerCase()]||[];
+  const pic=myPic(),av=$('#pav');av.textContent=pic?'':user.charAt(0).toUpperCase();av.style.background=pic?'url('+pic+') center/cover':'';$('#pname').textContent='@'+user;
+  $('#pvis').textContent=(kid||teen)?'Cuenta privada':'Cuenta pública';
+  $('#pcount').textContent=v.length;$('#fcount').textContent=FOL.list(user).length;$('#pempty').hidden=v.length>0;
+  $('#grid').replaceChildren(...v.map(d=>{const b=document.createElement('button');b.className='th';b.setAttribute('aria-label','Ver video');b.append(seedStage(d,1));b.onclick=()=>openFeed(card(seedStage(d),'@'+user+' · Mi video en Rotik',privTxt(),0,null,d.id));return b}));
+  go('s-profile');
+}
+$('#nav').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;const s=b.dataset.s;if(s===cur)return;if(s==='s-edit')resetEd();else if(s==='s-feed')openFeed();else openProfile()};
+
+// Fotos y videos de la galería (los archivos se guardan en este navegador)
+let pend=null;
+const IDB={db:null,open(){return this.db||(this.db=new Promise((ok,no)=>{const r=indexedDB.open('rotik',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}))},
+  async put(k,b){const db=await this.open();return new Promise((ok,no)=>{const t=db.transaction('m','readwrite');t.objectStore('m').put(b,k);t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)})},
+  async get(k){const db=await this.open();return new Promise((ok,no)=>{const r=db.transaction('m').objectStore('m').get(k);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}};
+const URLS={};
+const io=new IntersectionObserver(es=>es.forEach(x=>{x.isIntersecting?x.target.play().catch(()=>{}):x.target.pause()}),{threshold:.6});
+async function mediaURL(id){if(!URLS[id]){try{const b=await IDB.get(id);if(b)URLS[id]=URL.createObjectURL(b)}catch(e){}}return URLS[id]}
+async function putMedia(s,d,still){
+  const u=await mediaURL(d.id);if(!u)return;
+  const v=d.m==='v',e=document.createElement(v?'video':'img');
+  e.src=still&&v?u+'#t=0.1':u;
+  if(v){e.muted=true;e.loop=true;e.playsInline=true;e.preload='metadata';if(!still){e.onclick=()=>{e.muted=!e.muted;toast(e.muted?'Sin sonido':'Con sonido')};io.observe(e)}}else e.alt='';
+  s.querySelector('.bg').append(e);
+}
+$('#upBtn').onclick=()=>$('#file').click();
+$('#file').onchange=async ev=>{
+  const f=ev.target.files[0];ev.target.value='';if(!f)return;
+  const v=f.type.startsWith('video/');
+  if(!v&&!f.type.startsWith('image/')){toast('Elige un video o una foto');return}
+  if(f.size>150*1048576){toast('El archivo pesa más de 150 MB. Elige uno más corto');return}
+  const el=document.createElement(v?'video':'img');
+  if(v){el.muted=true;el.loop=true;el.playsInline=true}
+  await new Promise(r=>{el.onerror=r;el[v?'onloadedmetadata':'onload']=r;el.src=URL.createObjectURL(f)});
+  if(v?!isFinite(el.duration):!el.naturalWidth){toast('No pudimos abrir ese archivo');return}
+  if(v&&el.duration>60){toast('Los videos de Rotik duran hasta 60 segundos');return}
+  bg.replaceChildren(el);pend={f,t:v?'v':'i'};if(v)el.play().catch(()=>{});
+};
+
+// Denuncias
+const REP={get(){try{return JSON.parse(localStorage.getItem('rotikReports')||'[]')}catch(e){return []}},has(id){return this.get().some(r=>r.id===id)},add(r){const a=this.get();a.push(r);try{localStorage.setItem('rotikReports',JSON.stringify(a))}catch(e){}}};
+const WHY=['Contenido sexual o solo para mayores de 18','Violencia o contenido que asusta','Acoso, burlas o bullying','Algo peligroso para menores de edad','Información falsa o engaño','Spam','Otra razón'];
+$('#repOpts').innerHTML=WHY.map((w,i)=>`<label class="opt"><input type="radio" name="why" value="${i}">${w}</label>`).join('');
+let repCur=null;
+function openReport(r,el){repCur={r,el};$('#repTxt').value='';document.querySelectorAll('[name=why]').forEach(x=>x.checked=false);$('#rep').showModal()}
+$('#repNo').onclick=()=>$('#rep').close();
+$('#repGo').onclick=()=>{
+  const w=document.querySelector('[name=why]:checked');
+  if(!w){toast('Elige una razón');return}
+  REP.add({id:repCur.r.id,u:repCur.r.u,why:WHY[+w.value],txt:$('#repTxt').value.trim(),by:user,t:Date.now()});
+  const p=document.createElement('p');p.className='s';p.textContent='Ocultaste este video y lo enviamos a revisión. Gracias por cuidar a la comunidad.';
+  repCur.el.replaceChildren(p);$('#rep').close();toast('Denuncia enviada');
+};
+
+// Comentarios
+const SU=['nube.azul','sofi.canta','tito.salta','vera.foto','pipe.juega'];
+const SC=['¡Qué lindo quedó!','Me encantó el sticker','Muy creativo','Jaja, me hiciste reír','¿Cómo hiciste ese efecto?','Quiero hacer uno igual','Qué bonitos colores'];
+const hs=s=>[...String(s)].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+function sample(id){const h=hs(id);return Array.from({length:h%4},(_,i)=>({u:SU[(h+i)%SU.length],t:SC[(h+i*3)%SC.length]}))}
+const COM={all(){try{return JSON.parse(localStorage.getItem('rotikComments')||'{}')}catch(e){return {}}},list(id){return this.all()[id]||[]},save(a){try{localStorage.setItem('rotikComments',JSON.stringify(a))}catch(e){}},add(id,c){const a=this.all();(a[id]=a[id]||[]).push(c);this.save(a)},del(id,ts){const a=this.all();a[id]=(a[id]||[]).filter(c=>c.ts!==ts);this.save(a)}};
+function comments(id,s){return [...(s?sample(id):[]),...COM.list(id)].map((c,i)=>({...c,k:id+'#'+(c.ts||'s'+i)})).filter(c=>!REP.has(c.k))}
+let cmCur=null;
+function renderComments(){
+  const l=$('#cmList'),all=comments(cmCur.id,cmCur.s);l.replaceChildren();
+  if(!all.length){const p=document.createElement('p');p.className='s';p.textContent='Todavía no hay comentarios. Escribe el primero.';l.append(p)}
+  all.forEach(c=>{
+    const mine=c.ts&&c.u===user,r=document.createElement('div'),t=document.createElement('p'),b=document.createElement('strong'),a=document.createElement('button');
+    b.textContent='@'+c.u+' ';t.append(b,c.t);
+    a.className='link';a.style.fontSize='.85rem';a.style.padding='4px 0';a.textContent=mine?'Borrar':'Denunciar';
+    a.onclick=()=>{if(mine)COM.del(cmCur.id,c.ts);else{REP.add({id:c.k,u:c.u,why:'Comentario',txt:c.t,by:user,t:Date.now()});toast('Comentario enviado a revisión')}renderComments();cmCur.cc()};
+    r.append(t,a);l.append(r);
+  });
+}
+function openComments(id,s,cc){
+  cmCur={id,s,cc};
+  $('#cmForm').hidden=kid;$('#cmNote').hidden=!kid;
+  $('#cmNote').textContent='Tu cuenta puede leer comentarios, pero no escribirlos. Un adulto podrá cambiarlo desde su panel de control.';
+  $('#cmIn').value='';renderComments();$('#cm').showModal();
+}
+$('#cmX').onclick=()=>$('#cm').close();
+$('#cmIn').onkeydown=ev=>{if(ev.key==='Enter')$('#cmGo').click()};
+$('#cmGo').onclick=()=>{
+  const t=$('#cmIn').value.trim();if(!t)return;
+  if(/https?:|www\.|\S+@\S+|\d{6,}/i.test(t)){toast('Por seguridad no se pueden compartir enlaces, correos ni teléfonos');return}
+  COM.add(cmCur.id,{u:user,t,ts:Date.now()});$('#cmIn').value='';renderComments();cmCur.cc();
+};
+
+// Videos infinitos
+const U=['luna.arte','dani.baila','abuela.rosa','mateo.dibuja','sofi.canta','pipe.juega','nube.azul','chef.mia','tito.salta','vera.foto'];
+const C=['Mi día en un minuto','Probando algo nuevo','Me salió a la primera','Para mis amigos','Hoy me siento creativo','Mira hasta el final','Un truco muy fácil','Mi mascota manda'];
+const G=[['#FF4F8B','#7B5CFF'],['#27C2A0','#2B2A6B'],['#FFD23F','#FF8A3D'],['#B79CFF','#FF4F8B'],['#27C2A0','#FFD23F'],['#FF8A3D','#FF4F8B']];
+const F=['none','saturate(1.6)','grayscale(1)','contrast(1.2) sepia(.4)'];
+const E=['\u2b50','\ud83c\udf08','\ud83e\udd84','\ud83d\udd25','\ud83d\udc9c','\ud83c\udf88','\u2728','\ud83d\udc31'];
+const T=['¡Hola!','Mira esto','Qué bueno','Sorpresa','Para ti','Ja, ja'];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function rnd(fu){
+  const g=pick(G),it=[];
+  for(let i=0,n=2+Math.floor(Math.random()*2);i<n;i++)it.push([pick(E),10+Math.random()*60,10+Math.random()*60]);
+  it.push([pick(T),10+Math.random()*30,65+Math.random()*15,1]);
+  return {id:'r'+Math.random().toString(36).slice(2,8),u:fu||pick(U),c:pick(C),g:`linear-gradient(${Math.floor(Math.random()*360)}deg,${g[0]},${g[1]},${g[0]})`,f:pick(F),n:Math.floor(20+Math.random()*900),i:it};
+}
+function more(k){if(feedMode==='fol'&&!FOL.list(user).length)return;const f=document.createDocumentFragment();for(let i=0;i<k;i++){const d=rnd(feedMode==='fol'?pick(FOL.list(user)):0);f.append(card(seedStage(d),'@'+d.u+' · '+d.c,'Video de ejemplo',d.n,{id:d.id,u:d.u}))}$('#vids').append(f)}
+$('#vids').addEventListener('scroll',()=>{const v=$('#vids');if(v.scrollTop+v.clientHeight*2>=v.scrollHeight)more(4)});
+function openFeed(mine,mode){
+  feedMode=mode||'for';
+  const v=$('#vids'),fl=FOL.list(user);v.replaceChildren(...(mine?[mine]:[]));
+  if(feedMode==='fol'&&!fl.length){emptyFol(v);syncTabs();go('s-feed');return}
+  SEED.filter(d=>!REP.has(d.u+d.c)&&(feedMode==='for'||fl.includes(d.u))).forEach(d=>v.append(card(seedStage(d),'@'+d.u+' · '+d.c,'Video de ejemplo',d.n,{id:d.u+d.c,u:d.u})));more(4);
+  syncTabs();go('s-feed');v.scrollTop=0;
+}
+
+// Cuentas e inicio de sesión (se guardan solo en este navegador)
+const USERS={get(){try{return JSON.parse(localStorage.getItem('rotikUsers')||'{}')}catch(e){return {}}},set(o){try{localStorage.setItem('rotikUsers',JSON.stringify(o));return true}catch(e){return false}}};
+const SES={get(){try{return localStorage.getItem('rotikSession')}catch(e){return null}},set(u){try{localStorage.setItem('rotikSession',u)}catch(e){}},clear(){try{localStorage.removeItem('rotikSession')}catch(e){}}};
+const hex=a=>[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function hash(p,s){return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s+p))))}
+async function register(u,p){
+  const all=USERS.get(),key=u.toLowerCase();
+  if(all[key]){$('#accErr').textContent='Ese nombre de usuario ya está en uso. Prueba con otro.';return}
+  const salt=()=>hex(crypto.getRandomValues(new Uint8Array(8))),s=salt(),a={u,s,h:await hash(p,s),kid,teen};
+  let code='';
+  if(kid){const ps=salt();a.pin={s:ps,h:await hash(kidPin,ps)}}
+  else{code=newCode();const rs=salt();a.rec={s:rs,h:await hash(norm(code),rs)}}
+  all[key]=a;
+  if(!USERS.set(all))toast('No pudimos guardar la cuenta en este navegador');
+  user=u;SES.set(key);kidPin='';
+  if(code){$('#recCode').textContent=code;$('#recOk').checked=false;$('#recErr').textContent='';go('s-recov')}else go('s-edit');
+  toast('Cuenta creada');
+}
+$('#logNext').onclick=async()=>{
+  const q=$('#lu').value.trim().toLowerCase(),p=$('#lp').value,e=$('#logErr');
+  if(!q||!p){e.textContent='Escribe tu nombre de usuario y tu contraseña.';return}
+  const all=USERS.get(),a=all[q];
+  if(!a||(await hash(p,a.s))!==a.h){e.textContent='El nombre de usuario o la contraseña no coinciden. Revísalos e inténtalo otra vez.';return}
+  e.textContent='';kid=a.kid;teen=a.teen;user=a.u;SES.set(a.u.toLowerCase());$('#lp').value='';
+  openFeed();toast('Hola, @'+a.u);
+};
+$('#toReg').onclick=()=>go('s-birth');
+// Recuperar contraseña (sin correo: código de recuperación o PIN del adulto)
+const lock={},norm=s=>s.toUpperCase().replace(/[\s-]/g,'');
+const newCode=()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c=[...crypto.getRandomValues(new Uint8Array(12))].map(x=>A[x%A.length]).join('');return c.slice(0,4)+'-'+c.slice(4,8)+'-'+c.slice(8)};
+$('#forgot').onclick=()=>{$('#fq').value=$('#lu').value;$('#fErr').textContent='';go('s-forgot')};
+$('#fBack').onclick=()=>go('s-login');
+$('#fSend').onclick=async()=>{
+  const q=$('#fq').value.trim().toLowerCase(),c=$('#fc').value.trim(),p=$('#fp').value,e=$('#fErr');
+  if(!q||!c){e.textContent='Escribe tu nombre de usuario y tu código.';return}
+  if(p.length<6){e.textContent='La contraseña nueva necesita al menos 6 caracteres.';return}
+  const L=lock[q]||(lock[q]={n:0,until:0});
+  if(Date.now()<L.until){e.textContent='Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';return}
+  const all=USERS.get(),a=all[q];
+  const ok=a&&(a.kid?a.pin&&await hash(c,a.pin.s)===a.pin.h:a.rec&&await hash(norm(c),a.rec.s)===a.rec.h);
+  if(!ok){if(++L.n>=5){L.n=0;L.until=Date.now()+300000}e.textContent='El nombre de usuario o el código no coinciden. Revísalos e inténtalo otra vez.';return}
+  a.s=hex(crypto.getRandomValues(new Uint8Array(8)));a.h=await hash(p,a.s);
+  if(!USERS.set(all)){e.textContent='No pudimos guardar el cambio en este navegador.';return}
+  L.n=0;e.textContent='';$('#lu').value=a.u;$('#lp').value='';$('#logErr').textContent='';$('#fc').value='';$('#fp').value='';
+  go('s-login');toast('Contraseña cambiada. Ya puedes entrar');
+};
+$('#recCopy').onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText($('#recCode').textContent):Promise.reject()).then(()=>toast('Código copiado'),()=>toast('No se pudo copiar. Anótalo a mano'))};
+$('#recGo').onclick=()=>{if(!$('#recOk').checked){$('#recErr').textContent='Marca la casilla cuando hayas guardado tu código.';return}go('s-edit')};
+$('#out').onclick=()=>{$('#pm').close();SES.clear();go('s-welcome');toast('Cerraste sesión')};
+
+// Foto de perfil (se guarda en este navegador)
+const myPic=()=>(USERS.get()[user.toLowerCase()]||{}).pic||'';
+function setPic(d){const all=USERS.get(),a=all[user.toLowerCase()];if(!a)return false;if(d)a.pic=d;else delete a.pic;const ok=USERS.set(all);openProfile();return ok}
+$('#pMenu').onclick=()=>{$('#picNote').hidden=!(kid||teen);$('#picDel').hidden=!myPic();$('#pm').showModal()};
+$('#pmX').onclick=()=>$('#pm').close();
+$('#picBtn').onclick=()=>$('#picFile').click();
+$('#picDel').onclick=()=>{$('#pm').close();setPic('');toast('Quitaste tu foto de perfil')};
+$('#picFile').onchange=async ev=>{
+  const f=ev.target.files[0];ev.target.value='';if(!f)return;
+  if(!f.type.startsWith('image/')){toast('Elige una imagen');return}
+  const img=new Image(),u=URL.createObjectURL(f);
+  await new Promise(r=>{img.onload=r;img.onerror=r;img.src=u});
+  if(!img.naturalWidth){URL.revokeObjectURL(u);toast('No pudimos abrir esa foto');return}
+  const n=Math.min(img.naturalWidth,img.naturalHeight),c=document.createElement('canvas');c.width=c.height=256;
+  c.getContext('2d').drawImage(img,(img.naturalWidth-n)/2,(img.naturalHeight-n)/2,n,n,0,0,256,256);
+  URL.revokeObjectURL(u);$('#pm').close();
+  toast(setPic(c.toDataURL('image/jpeg',.85))?'Foto de perfil cambiada':'No pudimos guardar la foto en este navegador');
+};
+
+// Seguir a otras personas
+let feedMode='for';
+const FOL={all(){try{return JSON.parse(localStorage.getItem('rotikFollows')||'{}')}catch(e){return {}}},list(k){return this.all()[(k||'').toLowerCase()]||[]},has(k,u){return this.list(k).includes(u)},toggle(k,u){const a=this.all(),key=k.toLowerCase(),l=a[key]||[];a[key]=l.includes(u)?l.filter(x=>x!==u):[...l,u];try{localStorage.setItem('rotikFollows',JSON.stringify(a))}catch(e){}}};
+const paintFol=b=>{const f=FOL.has(user,b.dataset.u);b.textContent=f?'Siguiendo':'Seguir';b.classList.toggle('on',f)};
+function syncTabs(){$('#tFol').classList.toggle('on',feedMode==='fol');$('#tFor').classList.toggle('on',feedMode==='for')}
+function emptyFol(v){const p=document.createElement('p');p.className='emp';p.textContent='Todavía no sigues a nadie. Ve a Para ti y toca Seguir en los creadores que te gusten.';v.append(p)}
+$('#tFor').onclick=()=>{if(feedMode!=='for')openFeed(null,'for')};
+$('#tFol').onclick=()=>{if(feedMode!=='fol')openFeed(null,'fol')};
+function openFol(){
+  const l=$('#flList'),f=FOL.list(user);l.replaceChildren();
+  if(!f.length){const p=document.createElement('p');p.className='s';p.textContent='Todavía no sigues a nadie.';l.append(p)}
+  f.forEach(u=>{
+    const r=document.createElement('div'),n=document.createElement('strong'),b=document.createElement('button');
+    r.className='row';r.style.cssText='justify-content:space-between;align-items:center';
+    n.textContent='@'+u;b.className='btn alt';b.style.cssText='min-height:40px;padding:6px 14px;font-size:.95rem';b.textContent='Dejar de seguir';
+    b.onclick=()=>{FOL.toggle(user,u);$('#fcount').textContent=FOL.list(user).length;openFol()};
+    r.append(n,b);l.append(r);
+  });
+  if(!$('#fl').open)$('#fl').showModal();
+}
+$('#fcBtn').onclick=openFol;
+$('#flX').onclick=()=>$('#fl').close();
+{const k=SES.get(),a=k&&USERS.get()[k];if(a){kid=a.kid;teen=a.teen;user=a.u;openFeed()}}
+</script>
+</body>
+</html>
